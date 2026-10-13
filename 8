@@ -1,0 +1,120 @@
+1. Login Form (login.html)
+<!DOCTYPE html>
+<html>
+<head>
+<title>Login Form</title>
+</head>
+<body>
+<form action="login" method="get">
+User Name :
+<input type="text" name="uname">
+<br><br>
+<input type="submit" value="Login">
+</form>
+</body>
+</html>
+2. Servlet Program (LoginServlet.java)
+package servletpackage;
+
+import java.io.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
+
+public class LoginServlet extends HttpServlet
+{
+    public void doGet(HttpServletRequest req,
+                      HttpServletResponse res)
+                      throws ServletException, IOException
+    {
+        res.setContentType("text/html");
+
+        PrintWriter pw = res.getWriter();
+
+        String name = req.getParameter("uname");
+
+        // Cookies
+        Cookie ck = new Cookie("user", name);
+        res.addCookie(ck);
+
+        // Session
+        HttpSession session = req.getSession();
+        session.setAttribute("uname", name);
+
+        pw.println("<h2>Welcome : " + name + "</h2>");
+
+        // URL Rewriting
+        pw.println("<a href='next?uname="
+                   + name + "'>Next Page</a>");
+    }
+}
+3. Next Servlet (NextServlet.java)
+package servletpackage;
+
+import java.io.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
+
+public class NextServlet extends HttpServlet
+{
+    public void doGet(HttpServletRequest req,
+                      HttpServletResponse res)
+                      throws ServletException, IOException
+    {
+        res.setContentType("text/html");
+
+        PrintWriter pw = res.getWriter();
+
+        // URL Rewriting
+        String uname = req.getParameter("uname");
+
+        pw.println("<h2>User Name from URL Rewriting : "
+                   + uname + "</h2>");
+
+        // Cookies
+        Cookie c[] = req.getCookies();
+
+        if(c != null)
+        {
+            pw.println("<h2>User Name from Cookie : "
+                       + c[0].getValue() + "</h2>");
+        }
+
+        // Session
+        HttpSession session = req.getSession(false);
+
+        if(session != null)
+        {
+            String sname =
+              (String)session.getAttribute("uname");
+            pw.println("<h2>User Name from Session : "+ sname + "</h2>");
+        }
+    }
+}
+4.  web.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
+         https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd"     version="5.0">
+    <servlet>
+        <servlet-name>LoginServlet</servlet-name>
+        <servlet-class>
+            servletpackage.LoginServlet
+        </servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>LoginServlet</servlet-name>
+        <url-pattern>/login</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>NextServlet</servlet-name>
+        <servlet-class>
+            servletpackage.NextServlet
+        </servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>NextServlet</servlet-name>
+        <url-pattern>/next</url-pattern>
+    </servlet-mapping>
+</web-app>
